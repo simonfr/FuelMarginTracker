@@ -36,7 +36,7 @@ def get_station_names():
         print(f"Warning: Could not fetch station names: {e}. Falling back to brand guessing.")
         return {}
 
-def fetch_yahoo_history(ticker, period="180d"):
+def fetch_yahoo_history(ticker, period="365d"):
     """Fetches historical daily close prices from Yahoo Finance."""
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?range={period}&interval=1d"
     try:
@@ -57,7 +57,7 @@ def fetch_yahoo_history(ticker, period="180d"):
         print(f"Error fetching Yahoo Finance data for {ticker}: {e}")
         return {}
 
-def get_aligned_financial_data(days=180):
+def get_aligned_financial_data(days=365):
     """Aligns WTI Crude prices in USD with EURUSD exchange rates to compute WTI in EUR/L."""
     wti_usd_map = fetch_yahoo_history("CL=F", f"{days}d")
     eurusd_map = fetch_yahoo_history("EURUSD=X", f"{days}d")
@@ -134,9 +134,9 @@ def parse_fuel_xml(xml_bytes, names_map):
     # We want to extract station information and their latest prices
     stations = {}
     
-    # To filter out inactive/closed stations, we only keep prices updated in the last 180 days
+    # To filter out inactive/closed stations, we only keep prices updated in the last 365 days
     today = datetime.date.today()
-    cutoff_date = today - datetime.timedelta(days=180)
+    cutoff_date = today - datetime.timedelta(days=365)
     
     for pdv in root.findall('pdv'):
         cp = pdv.get('cp')
@@ -234,7 +234,7 @@ def calculate_national_averages(stations, today_str):
     return averages
 
 def update_database(stations, finance_data):
-    """Updates the static JSON files on a rolling 180-day window basis."""
+    """Updates the static JSON files on a rolling 365-day window basis."""
     today_str = datetime.date.today().isoformat()
     
     # 1. Update National Data
@@ -274,9 +274,9 @@ def update_database(stations, finance_data):
     updated_history = [entry for entry in national_history if entry["date"] != today_str]
     updated_history.append(today_entry)
     
-    # Sort and keep rolling 180 days of national history (gives a nice chart)
+    # Sort and keep rolling 365 days of national history (gives a nice chart)
     updated_history.sort(key=lambda x: x["date"])
-    updated_history = updated_history[-180:]
+    updated_history = updated_history[-365:]
     
     with open(national_file, 'w', encoding='utf-8') as f:
         json.dump(updated_history, f, ensure_ascii=False, separators=(',', ':'))
@@ -313,7 +313,7 @@ def update_database(stations, finance_data):
     #   ]
     # }
     print(f"Updating {len(updated_cps)} station JSON files...")
-    cutoff_history = (datetime.date.today() - datetime.timedelta(days=180)).isoformat()
+    cutoff_history = (datetime.date.today() - datetime.timedelta(days=365)).isoformat()
     
     for cp in updated_cps:
         cp_file = os.path.join(STATIONS_DIR, f"{cp}.json")
@@ -367,7 +367,7 @@ def update_database(stations, finance_data):
                     "price": p_info["price"]
                 })
                 
-                # Sort and clean history older than 180 days
+                # Sort and clean history older than 365 days
                 station_node["history"][fuel].sort(key=lambda x: x["date"])
                 station_node["history"][fuel] = [h for h in station_node["history"][fuel] if h["date"] >= cutoff_history]
                 
@@ -477,7 +477,7 @@ def run_update():
     names_map = get_station_names()
     
     # Step 2: Fetch Yahoo finance data
-    finance_data = get_aligned_financial_data(days=180)
+    finance_data = get_aligned_financial_data(days=365)
     
     # Step 3: Fetch French fuel instant data
     print("Downloading French fuel price instant data...")
