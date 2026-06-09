@@ -710,7 +710,7 @@ function resetStationDetailView() {
   document.getElementById('station-name-text').textContent = 'Sélectionnez une station';
   document.getElementById('station-address-text').textContent = 'Veuillez d\'abord chercher un code postal.';
   document.getElementById('latency-indicator').style.display = 'none';
-  document.getElementById('station-price-breakdown').style.display = 'none';
+  document.getElementById('st-price-breakdown').style.display = 'none';
   document.getElementById('station-chart-wrapper').style.display = 'none';
   document.getElementById('station-chart-empty').style.display = 'flex';
   
