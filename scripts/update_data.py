@@ -90,6 +90,11 @@ def get_aligned_financial_data(days=365):
         
     return aligned
 
+# Manual brand overrides for station IDs missing from the community names integration
+STATION_OVERRIDES = {
+    "91630001": "Carrefour Market"
+}
+
 def guess_brand(adresse, ville):
     addr_upper = (adresse + " " + ville).upper()
     if "TOTAL" in addr_upper:
@@ -158,11 +163,13 @@ def parse_fuel_xml(xml_bytes, names_map):
         ville = ville_el.text.strip() if ville_el is not None and ville_el.text else ""
         
         # Get brand
-        brand = names_map.get(station_id, "")
-        if brand and isinstance(brand, dict):
-            brand = brand.get("name") or brand.get("brand") or "Station"
-        elif not brand:
-            brand = guess_brand(adresse, ville)
+        brand = STATION_OVERRIDES.get(station_id)
+        if not brand:
+            brand = names_map.get(station_id, "")
+            if brand and isinstance(brand, dict):
+                brand = brand.get("name") or brand.get("brand") or "Station"
+            elif not brand:
+                brand = guess_brand(adresse, ville)
             
         # Parse prices
         prices = {}
