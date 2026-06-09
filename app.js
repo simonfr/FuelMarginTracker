@@ -508,6 +508,12 @@ function renderNationalChart() {
         mode: 'index',
         intersect: false,
       },
+      elements: {
+        point: {
+          radius: 0,
+          hoverRadius: 5
+        }
+      },
       plugins: {
         legend: {
           position: 'top',
@@ -1073,6 +1079,12 @@ function renderStationChart(station) {
       interaction: {
         mode: 'index',
         intersect: false,
+      },
+      elements: {
+        point: {
+          radius: 0,
+          hoverRadius: 5
+        }
       },
       plugins: {
         legend: {
