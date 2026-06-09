@@ -54,6 +54,34 @@
         </div>
       </div>
 
+      <!-- Price Breakdown Component -->
+      <div class="price-breakdown-container" id="national-price-breakdown">
+        <div class="price-breakdown-title">📊 Répartition du Prix Moyen National (Taxes, Pétrole & Marge)</div>
+        <div class="breakdown-bar">
+          <div class="breakdown-segment wti" id="nat-bar-wti" style="width: 0%" title="Brut WTI"></div>
+          <div class="breakdown-segment ticpe" id="nat-bar-ticpe" style="width: 0%" title="TICPE (Taxe Fixe)"></div>
+          <div class="breakdown-segment tva" id="nat-bar-tva" style="width: 0%" title="TVA (20%)"></div>
+          <div class="breakdown-segment distributor" id="nat-bar-dist" style="width: 0%" title="Raffinage / Transport / Distributeur"></div>
+        </div>
+        <div class="breakdown-legend">
+          <div class="legend-item">
+            <span class="dot wti"></span> Brut WTI : <span id="nat-lbl-wti">- €/L</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot ticpe"></span> TICPE : <span id="nat-lbl-ticpe">- €/L</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot tva"></span> TVA (20%) : <span id="nat-lbl-tva">- €/L</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot distributor"></span> Part Distributeur* : <span id="nat-lbl-dist">- €/L</span>
+          </div>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; font-style: italic; margin-bottom: 0;">
+          * La part distributeur comprend le raffinage, le transport, le stockage et la marge commerciale nette du distributeur.
+        </p>
+      </div>
+
       <!-- Chart Controls -->
       <div class="controls-bar">
         <div>
@@ -155,6 +183,11 @@
           Stations trouvées :
         </div>
 
+        <!-- Station local search/filter bar -->
+        <div class="station-filter-wrapper" id="station-filter-wrapper" style="display: none; margin-bottom: 0.5rem;">
+          <input type="text" class="station-filter-input" id="station-list-filter" placeholder="Filtrer par enseigne, ville ou adresse... (ex: Total, Leclerc)">
+        </div>
+
         <!-- Station listing container -->
         <div class="station-list" id="station-list">
           <div class="empty-state">
@@ -176,7 +209,7 @@
           <h3 id="station-name-text" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">Sélectionnez une station</h3>
           <p id="station-address-text" style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Veuillez d'abord chercher un code postal.</p>
           
-          <div id="latency-indicator" style="display: none;">
+          <div id="latency-indicator" style="display: none; margin-bottom: 1rem;">
             <div class="latency-badge">
               <span>⏱️ Latence de répercussion des baisses :</span>
               <span class="latency-value" id="latency-days">~ Jours</span>
@@ -184,6 +217,31 @@
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic;">
               * Calcule la latence moyenne de cette station pour répercuter les baisses de cours du WTI.
             </p>
+          </div>
+
+          <!-- Station Price Breakdown Component -->
+          <div class="price-breakdown-container" id="station-price-breakdown" style="display: none; margin-bottom: 1rem;">
+            <div class="price-breakdown-title">📊 Répartition du Prix de cette Station (Taxes, Pétrole & Marge)</div>
+            <div class="breakdown-bar">
+              <div class="breakdown-segment wti" id="st-bar-wti" style="width: 0%" title="Brut WTI"></div>
+              <div class="breakdown-segment ticpe" id="st-bar-ticpe" style="width: 0%" title="TICPE (Taxe Fixe)"></div>
+              <div class="breakdown-segment tva" id="st-bar-tva" style="width: 0%" title="TVA (20%)"></div>
+              <div class="breakdown-segment distributor" id="st-bar-dist" style="width: 0%" title="Raffinage / Transport / Distributeur"></div>
+            </div>
+            <div class="breakdown-legend">
+              <div class="legend-item">
+                <span class="dot wti"></span> WTI : <span id="st-lbl-wti">- €</span>
+              </div>
+              <div class="legend-item">
+                <span class="dot ticpe"></span> TICPE : <span id="st-lbl-ticpe">- €</span>
+              </div>
+              <div class="legend-item">
+                <span class="dot tva"></span> TVA : <span id="st-lbl-tva">- €</span>
+              </div>
+              <div class="legend-item">
+                <span class="dot distributor"></span> Part Dist. : <span id="st-lbl-dist">- €</span>
+              </div>
+            </div>
           </div>
         </div>
 

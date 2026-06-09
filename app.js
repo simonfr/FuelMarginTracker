@@ -10,20 +10,164 @@ let currentStations = [];
 let selectedStation = null;
 
 // Brand parsing helpers to handle both string and object types
-function getBrandName(brand) {
-  if (!brand) return 'Station';
-  if (typeof brand === 'object') {
-    return brand.name || brand.brand || 'Station';
+function parseBrand(brand) {
+  let brandStr = 'Station';
+  if (brand) {
+    if (typeof brand === 'object') {
+      brandStr = brand.brand || brand.name || 'Station';
+    } else {
+      brandStr = brand;
+    }
   }
-  return brand;
+  
+  const knownBrands = [
+    'TotalEnergies', 'Total Energies', 'Total', 'Carrefour Contact', 'Carrefour Market', 'Carrefour Express', 'Carrefour',
+    'E.Leclerc', 'Leclerc', 'Intermarché Contact', 'Intermarché Super', 'Intermarché Hyper', 'Intermarché',
+    'Super U', 'Hyper U', 'U Express', 'Système U', 'Esso Express', 'Esso', 'BP', 'Avia', 'Auchan Supermarché',
+    'Auchan', 'Cora', 'Dyneff', 'Elan', 'Shell', 'Colruyt', 'Netto', 'Agip'
+  ];
+  
+  let normalized = brandStr.trim();
+  for (const kb of knownBrands) {
+    const regex = new RegExp('^' + kb, 'i');
+    if (regex.test(normalized)) {
+      const short = kb;
+      let modifier = normalized.substring(kb.length).trim();
+      modifier = modifier.replace(/^[\s\-\,]+/, '');
+      return { short, modifier };
+    }
+  }
+  
+  const firstSpace = normalized.indexOf(' ');
+  if (firstSpace > 0) {
+    return {
+      short: normalized.substring(0, firstSpace),
+      modifier: normalized.substring(firstSpace).trim()
+    };
+  }
+  
+  return { short: normalized, modifier: '' };
+}
+
+function getBrandName(brand) {
+  const p = parseBrand(brand);
+  return p.modifier ? `${p.short} - ${p.modifier}` : p.short;
 }
 
 function getBrandShort(brand) {
-  if (!brand) return 'Station';
-  if (typeof brand === 'object') {
-    return brand.brand || brand.name || 'Station';
+  return parseBrand(brand).short;
+}
+
+// French fuel taxes: TVA (20% on pump price -> pumpPrice / 6) & TICPE (fixed per liter)
+function getPriceBreakdown(pumpPrice, fuelKey, wtiEur) {
+  if (!pumpPrice) return null;
+  
+  const tva = pumpPrice / 6.0;
+  
+  let ticpe = 0.0;
+  if (fuelKey === 'Gazole') {
+    ticpe = 0.5940;
+  } else if (fuelKey === 'E10' || fuelKey === 'SP95') {
+    ticpe = 0.6629;
+  } else if (fuelKey === 'SP98') {
+    ticpe = 0.6829;
+  } else {
+    ticpe = 0.6629;
   }
-  return brand;
+  
+  const rawWti = wtiEur || 0.0;
+  
+  // Calculate distributor share (clamped at 0 for display)
+  let distributor = pumpPrice - (tva + ticpe + rawWti);
+  const displayDistributor = Math.max(0, distributor);
+  
+  return {
+    pumpPrice,
+    tva,
+    ticpe,
+    wti: rawWti,
+    distributor,
+    displayDistributor
+  };
+}
+
+function updatePriceBreakdown(containerPrefix, breakdown) {
+  const container = document.getElementById(`${containerPrefix}-price-breakdown`);
+  if (!container) return;
+  
+  if (!breakdown) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  container.style.display = 'block';
+  
+  const { pumpPrice, tva, ticpe, wti, displayDistributor } = breakdown;
+  
+  // Calculate segments percentages based on the visual sum
+  const visualSum = wti + ticpe + tva + displayDistributor;
+  
+  const pctWti = visualSum > 0 ? (wti / visualSum) * 100 : 0;
+  const pctTicpe = visualSum > 0 ? (ticpe / visualSum) * 100 : 0;
+  const pctTva = visualSum > 0 ? (tva / visualSum) * 100 : 0;
+  const pctDist = visualSum > 0 ? (displayDistributor / visualSum) * 100 : 0;
+  
+  // Update segment widths
+  const barWti = document.getElementById(`${containerPrefix}-bar-wti`);
+  const barTicpe = document.getElementById(`${containerPrefix}-bar-ticpe`);
+  const barTva = document.getElementById(`${containerPrefix}-bar-tva`);
+  const barDist = document.getElementById(`${containerPrefix}-bar-dist`);
+  
+  if (barWti) barWti.style.width = `${pctWti}%`;
+  if (barTicpe) barTicpe.style.width = `${pctTicpe}%`;
+  if (barTva) barTva.style.width = `${pctTva}%`;
+  if (barDist) barDist.style.width = `${pctDist}%`;
+  
+  // Update title/legend tooltips
+  if (barWti) barWti.title = `Brut WTI : ${wti.toFixed(3)} €/L (${pctWti.toFixed(1)}%)`;
+  if (barTicpe) barTicpe.title = `TICPE : ${ticpe.toFixed(4)} €/L (${pctTicpe.toFixed(1)}%)`;
+  if (barTva) barTva.title = `TVA (20%) : ${tva.toFixed(3)} €/L (${pctTva.toFixed(1)}%)`;
+  if (barDist) barDist.title = `Part Distributeur : ${breakdown.distributor.toFixed(3)} €/L (${pctDist.toFixed(1)}%)`;
+  
+  // Update legend text
+  const lblWti = document.getElementById(`${containerPrefix}-lbl-wti`);
+  const lblTicpe = document.getElementById(`${containerPrefix}-lbl-ticpe`);
+  const lblTva = document.getElementById(`${containerPrefix}-lbl-tva`);
+  const lblDist = document.getElementById(`${containerPrefix}-lbl-dist`);
+  
+  if (lblWti) lblWti.textContent = `${wti.toFixed(3)} €/L`;
+  if (lblTicpe) lblTicpe.textContent = `${ticpe.toFixed(4)} €/L`;
+  if (lblTva) lblTva.textContent = `${tva.toFixed(3)} €/L`;
+  if (lblDist) {
+    lblDist.textContent = `${breakdown.distributor.toFixed(3)} €/L`;
+    if (breakdown.distributor < 0) {
+      lblDist.style.color = '#ef4444';
+    } else {
+      lblDist.style.color = '';
+    }
+  }
+}
+
+function filterStationsList(query) {
+  if (!query) {
+    renderStationsList(currentStations);
+    return;
+  }
+  
+  const filtered = currentStations.filter(station => {
+    const brandObj = parseBrand(station.brand);
+    const brandShort = brandObj.short.toLowerCase();
+    const brandMod = brandObj.modifier.toLowerCase();
+    const address = station.adresse.toLowerCase();
+    const city = station.ville.toLowerCase();
+    
+    return brandShort.includes(query) || 
+           brandMod.includes(query) || 
+           address.includes(query) || 
+           city.includes(query);
+  });
+  
+  renderStationsList(filtered, true);
 }
 
 // Fuel Display Mapping
@@ -208,6 +352,15 @@ function updateTopMetrics() {
     document.getElementById('stat-margin').textContent = `${margin.toFixed(3)} €/L`;
   } else {
     document.getElementById('stat-margin').textContent = '- €';
+  }
+  
+  // National Price Breakdown
+  const fuelKey = fuelKeysMap[selectedFuel];
+  if (activeFuelVal && wtiVal) {
+    const breakdown = getPriceBreakdown(activeFuelVal, fuelKey, wtiVal);
+    updatePriceBreakdown('nat', breakdown);
+  } else {
+    updatePriceBreakdown('nat', null);
   }
 }
 
@@ -398,6 +551,15 @@ function setupEventListeners() {
       dropdown.style.display = 'block';
     }
   });
+  
+  // Local station list filter
+  const listFilter = document.getElementById('station-list-filter');
+  if (listFilter) {
+    listFilter.addEventListener('input', (e) => {
+      const val = e.target.value.trim().toLowerCase();
+      filterStationsList(val);
+    });
+  }
 }
 
 // Render Autocomplete Dropdown
@@ -467,9 +629,27 @@ async function loadStationsByPostalCode(cp) {
 }
 
 // Render Stations List
-function renderStationsList(stations) {
+function renderStationsList(stations, isFiltered) {
   const container = document.getElementById('station-list');
   container.innerHTML = '';
+  
+  // Show/Hide local filter wrapper based on loaded stations
+  const filterWrapper = document.getElementById('station-filter-wrapper');
+  if (currentStations.length > 0) {
+    filterWrapper.style.display = 'block';
+  } else {
+    filterWrapper.style.display = 'none';
+  }
+  
+  if (stations.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding: 2rem 1rem;">
+        <div class="empty-state-icon">🔍</div>
+        <p>${isFiltered ? "Aucune station ne correspond à votre filtre." : "Aucune station disponible."}</p>
+      </div>
+    `;
+    return;
+  }
   
   const fuelKey = fuelKeysMap[selectedFuel];
   
@@ -484,13 +664,25 @@ function renderStationsList(stations) {
       item.classList.add('active');
     }
     
+    // Parse brand to short/modifier
+    const brandInfo = parseBrand(station.brand);
+    
     item.innerHTML = `
       <div class="station-item-header">
-        <span class="station-brand">${getBrandName(station.brand)}</span>
+        <span class="station-brand">${brandInfo.short}</span>
         <span class="station-price-tag" style="color: ${fuelColors[selectedFuel]}">${latestPrice}</span>
       </div>
-      <div class="station-address">${station.adresse.toLowerCase()}</div>
-      <div class="station-address" style="text-transform: capitalize; color: var(--text-muted);">${station.ville.toLowerCase()}</div>
+      ${brandInfo.modifier ? `<div class="station-item-modifier">${brandInfo.modifier}</div>` : ''}
+      <div class="station-item-details">
+        <div class="station-item-detail-row">
+          <span class="station-item-detail-icon">📍</span>
+          <span>${station.adresse.toLowerCase()}</span>
+        </div>
+        <div class="station-item-detail-row">
+          <span class="station-item-detail-icon">🏙️</span>
+          <span style="text-transform: capitalize;">${station.ville.toLowerCase()} (${station.cp})</span>
+        </div>
+      </div>
     `;
     
     item.addEventListener('click', () => {
@@ -518,6 +710,7 @@ function resetStationDetailView() {
   document.getElementById('station-name-text').textContent = 'Sélectionnez une station';
   document.getElementById('station-address-text').textContent = 'Veuillez d\'abord chercher un code postal.';
   document.getElementById('latency-indicator').style.display = 'none';
+  document.getElementById('station-price-breakdown').style.display = 'none';
   document.getElementById('station-chart-wrapper').style.display = 'none';
   document.getElementById('station-chart-empty').style.display = 'flex';
   
@@ -533,8 +726,12 @@ function updateStationDetailView(station) {
   detailCard.style.opacity = '1';
   detailCard.style.pointerEvents = 'auto';
   
-  document.getElementById('station-brand-badge').textContent = getBrandShort(station.brand);
-  document.getElementById('station-name-text').textContent = getBrandName(station.brand);
+  const brandInfo = parseBrand(station.brand);
+  document.getElementById('station-brand-badge').textContent = brandInfo.short;
+  
+  const fullName = brandInfo.modifier ? `${brandInfo.short} - ${brandInfo.modifier}` : brandInfo.short;
+  document.getElementById('station-name-text').textContent = fullName;
+  
   document.getElementById('station-address-text').textContent = `${station.adresse.toLowerCase()}, ${station.cp} ${station.ville}`;
   
   // Calculate and display latency
@@ -549,6 +746,32 @@ function updateStationDetailView(station) {
   } else {
     latencyText.textContent = `N/A (cours trop stables / données insuffisantes)`;
     latencyIndicator.style.display = 'block';
+  }
+  
+  // Station Price Breakdown
+  let latestPrice = null;
+  const stationHistory = station.history[fuelKey] || [];
+  if (stationHistory.length > 0) {
+    latestPrice = stationHistory[stationHistory.length - 1].price;
+  }
+  
+  let stationWti = null;
+  if (stationHistory.length > 0) {
+    const latestDate = stationHistory[stationHistory.length - 1].date;
+    const nationalEntry = nationalData.find(d => d.date === latestDate);
+    if (nationalEntry) {
+      stationWti = nationalEntry.wti_eur;
+    }
+  }
+  if (!stationWti && nationalData.length > 0) {
+    stationWti = nationalData[nationalData.length - 1].wti_eur;
+  }
+  
+  if (latestPrice && stationWti) {
+    const breakdown = getPriceBreakdown(latestPrice, fuelKey, stationWti);
+    updatePriceBreakdown('st', breakdown);
+  } else {
+    updatePriceBreakdown('st', null);
   }
   
   // Show chart wrapper

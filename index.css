@@ -507,3 +507,146 @@ header {
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* Price Breakdown Component */
+.price-breakdown-container {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-light);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(8px);
+}
+
+.price-breakdown-title {
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.breakdown-bar {
+  display: flex;
+  height: 16px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.breakdown-segment {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.breakdown-segment:last-child {
+  border-right: none;
+}
+
+.breakdown-segment.wti { background: var(--color-wti); }
+.breakdown-segment.ticpe { background: var(--color-sp95); }
+.breakdown-segment.tva { background: var(--color-sp98); }
+.breakdown-segment.distributor { background: var(--color-margin); }
+
+.breakdown-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .breakdown-legend {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.legend-item {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend-item span {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.legend-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.legend-item .dot.wti { background-color: var(--color-wti); box-shadow: 0 0 6px var(--color-wti); }
+.legend-item .dot.ticpe { background-color: var(--color-sp95); box-shadow: 0 0 6px var(--color-sp95); }
+.legend-item .dot.tva { background-color: var(--color-sp98); box-shadow: 0 0 6px var(--color-sp98); }
+.legend-item .dot.distributor { background-color: var(--color-margin); box-shadow: 0 0 6px var(--color-margin); }
+
+/* Station list local filter input */
+.station-filter-wrapper {
+  width: 100%;
+  padding: 0 0.1rem;
+}
+
+.station-filter-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-light);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.813rem;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.station-filter-input:focus {
+  border-color: var(--color-wti);
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Enhancements to Station List Items */
+.station-item-modifier {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: -0.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.station-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.03);
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.station-item-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.station-item-detail-icon {
+  font-size: 0.813rem;
+  flex-shrink: 0;
+}
+

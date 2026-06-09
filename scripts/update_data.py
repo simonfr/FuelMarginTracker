@@ -159,7 +159,9 @@ def parse_fuel_xml(xml_bytes, names_map):
         
         # Get brand
         brand = names_map.get(station_id, "")
-        if not brand:
+        if brand and isinstance(brand, dict):
+            brand = brand.get("name") or brand.get("brand") or "Station"
+        elif not brand:
             brand = guess_brand(adresse, ville)
             
         # Parse prices
@@ -410,6 +412,63 @@ def update_database(stations, finance_data):
     with open(index_file, 'w', encoding='utf-8') as f:
         json.dump(search_index, f, ensure_ascii=False, separators=(',', ':'))
     print("Search index updated.")
+    
+    # 4. Generate Margins Ranking File
+    print("Generating margins ranking...")
+    generate_rankings(stations, wti_eur)
+
+def generate_rankings(stations, wti_eur):
+    """Generates the top 10 and bottom 10 stations by margin for each fuel type."""
+    if wti_eur is None:
+        print("Warning: Cannot calculate margins ranking because WTI price is missing.")
+        return
+        
+    fuels = ["Gazole", "SP95", "SP98", "E10"]
+    rankings = {}
+    
+    for fuel in fuels:
+        fuel_stations = []
+        for s_id, s in stations.items():
+            if fuel in s["prices"]:
+                p_info = s["prices"][fuel]
+                price = p_info["price"]
+                brand_name = s["brand"]
+                if isinstance(brand_name, dict):
+                    brand_name = brand_name.get("name") or brand_name.get("brand") or "Station"
+                    
+                fuel_stations.append({
+                    "id": s_id,
+                    "brand": brand_name,
+                    "adresse": s["adresse"],
+                    "ville": s["ville"],
+                    "cp": s["cp"],
+                    "price": price,
+                    "margin": round(price - wti_eur, 4)
+                })
+                
+        if not fuel_stations:
+            rankings[fuel] = {"top": [], "bottom": []}
+            continue
+            
+        # Sort by price ascending
+        fuel_stations.sort(key=lambda x: x["price"])
+        
+        # Bottom 10 (cheapest prices/margins)
+        bottom_10 = fuel_stations[:10]
+        
+        # Top 10 (most expensive prices/margins)
+        top_10 = fuel_stations[-10:]
+        top_10.reverse()
+        
+        rankings[fuel] = {
+            "top": top_10,
+            "bottom": bottom_10
+        }
+        
+    ranking_file = os.path.join(DATA_DIR, "margins_ranking.json")
+    with open(ranking_file, 'w', encoding='utf-8') as f:
+        json.dump(rankings, f, ensure_ascii=False, separators=(',', ':'))
+    print("Margins rankings updated.")
 
 def run_update():
     print("FuelMarginTracker Update Job Started.")
