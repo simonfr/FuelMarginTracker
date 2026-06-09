@@ -943,6 +943,8 @@ function renderStationChart(station) {
   const tickColor = isDark ? '#64748b' : '#475569';
   const wtiColor = isDark ? '#06b6d4' : '#0891b2';
   const nationalAvgColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)';
+  const marginColor = isDark ? '#fbbf24' : '#d97706';
+  const marginBgColor = isDark ? 'rgba(251, 191, 36, 0.05)' : 'rgba(217, 119, 6, 0.05)';
   
   const fuelKey = fuelKeysMap[selectedFuel];
   const stationHistory = station.history[fuelKey] || [];
@@ -963,6 +965,39 @@ function renderStationChart(station) {
   const wtiPrices = dates.map(date => {
     const entry = nationalData.find(d => d.date === date);
     return entry ? entry.wti_eur : null;
+  });
+  
+  // Calculate Part Distributeur
+  let ticpe = 0.6629;
+  if (fuelKey === 'Gazole') {
+    ticpe = 0.5940;
+  } else if (fuelKey === 'E10' || fuelKey === 'SP95') {
+    ticpe = 0.6629;
+  } else if (fuelKey === 'SP98') {
+    ticpe = 0.6829;
+  }
+  
+  const stationDistributorShares = dates.map((date, idx) => {
+    const pumpPrice = stationPrices[idx];
+    const wti = wtiPrices[idx];
+    if (pumpPrice && wti !== null && wti !== undefined) {
+      const tva = pumpPrice / 6.0;
+      return pumpPrice - (tva + ticpe + wti);
+    }
+    return null;
+  });
+  
+  const nationalDistributorShares = dates.map(date => {
+    const entry = nationalData.find(d => d.date === date);
+    if (entry) {
+      const pumpPrice = entry[selectedFuel];
+      const wti = entry.wti_eur;
+      if (pumpPrice && wti !== null && wti !== undefined) {
+        const tva = pumpPrice / 6.0;
+        return pumpPrice - (tva + ticpe + wti);
+      }
+    }
+    return null;
   });
   
   const labels = dates.map(date => {
@@ -987,7 +1022,8 @@ function renderStationChart(station) {
           borderColor: fuelColors[selectedFuel],
           borderWidth: 3,
           fill: false,
-          tension: 0.15
+          tension: 0.15,
+          yAxisID: 'y'
         },
         {
           label: 'Moyenne Nationale',
@@ -996,7 +1032,8 @@ function renderStationChart(station) {
           borderWidth: 2,
           borderDash: [3, 3],
           fill: false,
-          tension: 0.1
+          tension: 0.1,
+          yAxisID: 'y'
         },
         {
           label: 'Brut WTI',
@@ -1005,7 +1042,28 @@ function renderStationChart(station) {
           borderWidth: 1.5,
           borderDash: [5, 5],
           fill: false,
-          tension: 0.1
+          tension: 0.1,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Part Distributeur (Locale)',
+          data: stationDistributorShares,
+          borderColor: marginColor,
+          borderWidth: 2.5,
+          backgroundColor: marginBgColor,
+          fill: false,
+          tension: 0.2,
+          yAxisID: 'y1'
+        },
+        {
+          label: 'Part Distributeur (Moy. Nationale)',
+          data: nationalDistributorShares,
+          borderColor: isDark ? 'rgba(251, 191, 36, 0.4)' : 'rgba(217, 119, 6, 0.4)',
+          borderWidth: 2,
+          borderDash: [3, 3],
+          fill: false,
+          tension: 0.15,
+          yAxisID: 'y1'
         }
       ]
     },
@@ -1031,8 +1089,16 @@ function renderStationChart(station) {
           ticks: { color: tickColor, font: { family: 'Outfit', size: 10 } }
         },
         y: {
+          position: 'left',
           grid: { color: gridColor },
-          ticks: { color: labelColor, font: { family: 'Outfit', size: 10 } }
+          ticks: { color: labelColor, font: { family: 'Outfit', size: 10 } },
+          title: { display: true, text: 'Prix à la pompe / WTI (€/L)', color: labelColor, font: { family: 'Outfit', size: 10 } }
+        },
+        y1: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: marginColor, font: { family: 'Outfit', size: 10 } },
+          title: { display: true, text: 'Part Distributeur (€/L)', color: marginColor, font: { family: 'Outfit', size: 10 } }
         }
       }
     }
