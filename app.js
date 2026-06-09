@@ -382,7 +382,27 @@ function renderNationalChart() {
   
   const wtiPrices = filteredData.map(d => d.wti_eur);
   const fuelPrices = filteredData.map(d => d[selectedFuel]);
-  const margins = filteredData.map(d => (d[selectedFuel] && d.wti_eur) ? (d[selectedFuel] - d.wti_eur) : null);
+  
+  // Calculate Part Distributeur instead of raw Gross Margin
+  const fuelKey = fuelKeysMap[selectedFuel];
+  let ticpe = 0.6629;
+  if (fuelKey === 'Gazole') {
+    ticpe = 0.5940;
+  } else if (fuelKey === 'E10' || fuelKey === 'SP95') {
+    ticpe = 0.6629;
+  } else if (fuelKey === 'SP98') {
+    ticpe = 0.6829;
+  }
+  
+  const distributorShares = filteredData.map(d => {
+    const pumpPrice = d[selectedFuel];
+    const wti = d.wti_eur;
+    if (pumpPrice && wti !== null && wti !== undefined) {
+      const tva = pumpPrice / 6.0;
+      return pumpPrice - (tva + ticpe + wti);
+    }
+    return null;
+  });
   
   if (nationalChartInstance) {
     nationalChartInstance.destroy();
@@ -421,8 +441,8 @@ function renderNationalChart() {
           yAxisID: 'y'
         },
         {
-          label: 'Marge Brut Théorique (€/L)',
-          data: margins,
+          label: 'Part Distributeur Reste (€/L)',
+          data: distributorShares,
           borderColor: '#fbbf24',
           borderWidth: 2.5,
           backgroundColor: 'rgba(251, 191, 36, 0.05)',
@@ -467,7 +487,7 @@ function renderNationalChart() {
           position: 'right',
           grid: { drawOnChartArea: false },
           ticks: { color: '#fbbf24', font: { family: 'Outfit' } },
-          title: { display: true, text: 'Marge Théorique (€/L)', color: '#fbbf24', font: { family: 'Outfit' } }
+          title: { display: true, text: 'Part Distributeur (€/L)', color: '#fbbf24', font: { family: 'Outfit' } }
         }
       }
     }
