@@ -246,11 +246,22 @@ function renderRankings() {
         });
       });
       
+      const tva = st.price / 6.0;
+      let ticpe = 0.6629;
+      if (selectedFuel === 'gazole') {
+        ticpe = 0.5940;
+      } else if (selectedFuel === 'e10' || selectedFuel === 'sp95') {
+        ticpe = 0.6629;
+      } else if (selectedFuel === 'sp98') {
+        ticpe = 0.6829;
+      }
+      const partDist = st.margin - tva - ticpe;
+      
       tr.innerHTML = `
         <td style="padding: 0.625rem 0.5rem; font-weight: 500;">${st.brand}</td>
         <td style="padding: 0.625rem 0.5rem; color: var(--text-secondary); text-transform: capitalize;">${st.ville.toLowerCase()} (${st.cp})</td>
         <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-e10);">${st.price.toFixed(3)} €</td>
-        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-margin);">+${st.margin.toFixed(3)} €</td>
+        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-margin);">${partDist.toFixed(3)} €</td>
       `;
       bottomTbody.appendChild(tr);
     });
@@ -278,11 +289,22 @@ function renderRankings() {
         });
       });
       
+      const tva = st.price / 6.0;
+      let ticpe = 0.6629;
+      if (selectedFuel === 'gazole') {
+        ticpe = 0.5940;
+      } else if (selectedFuel === 'e10' || selectedFuel === 'sp95') {
+        ticpe = 0.6629;
+      } else if (selectedFuel === 'sp98') {
+        ticpe = 0.6829;
+      }
+      const partDist = st.margin - tva - ticpe;
+      
       tr.innerHTML = `
         <td style="padding: 0.625rem 0.5rem; font-weight: 500;">${st.brand}</td>
         <td style="padding: 0.625rem 0.5rem; color: var(--text-secondary); text-transform: capitalize;">${st.ville.toLowerCase()} (${st.cp})</td>
         <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-sp98);">${st.price.toFixed(3)} €</td>
-        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-margin);">+${st.margin.toFixed(3)} €</td>
+        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-margin);">${partDist.toFixed(3)} €</td>
       `;
       topTbody.appendChild(tr);
     });
@@ -345,17 +367,17 @@ function updateTopMetrics() {
   document.getElementById('stat-gazole').textContent = gazoleVal ? `${gazoleVal.toFixed(3)} €/L` : '- €';
   document.getElementById('stat-e10').textContent = e10Val ? `${e10Val.toFixed(3)} €/L` : '- €';
   
-  // Calculate margin for active fuel type
+  // Calculate Part Distributeur for active fuel type
   const activeFuelVal = latest[selectedFuel];
+  const fuelKey = fuelKeysMap[selectedFuel];
   if (activeFuelVal && wtiVal) {
-    const margin = activeFuelVal - wtiVal;
-    document.getElementById('stat-margin').textContent = `${margin.toFixed(3)} €/L`;
+    const breakdown = getPriceBreakdown(activeFuelVal, fuelKey, wtiVal);
+    document.getElementById('stat-margin').textContent = `${breakdown.distributor.toFixed(3)} €/L`;
   } else {
     document.getElementById('stat-margin').textContent = '- €';
   }
   
   // National Price Breakdown
-  const fuelKey = fuelKeysMap[selectedFuel];
   if (activeFuelVal && wtiVal) {
     const breakdown = getPriceBreakdown(activeFuelVal, fuelKey, wtiVal);
     updatePriceBreakdown('nat', breakdown);

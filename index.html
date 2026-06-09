@@ -49,14 +49,14 @@
           <span class="stat-value" id="stat-e10">- €</span>
         </div>
         <div class="stat-box margin">
-          <span class="stat-label">Marge Brut Théorique</span>
+          <span class="stat-label">Part Distributeur</span>
           <span class="stat-value" id="stat-margin">- €</span>
         </div>
       </div>
 
       <!-- Price Breakdown Component -->
       <div class="price-breakdown-container" id="nat-price-breakdown">
-        <div class="price-breakdown-title">📊 Répartition du Prix Moyen National (Taxes, Pétrole & Marge)</div>
+        <div class="price-breakdown-title">📊 Répartition du Prix Moyen National (Taxes, Pétrole & Distributeur)</div>
         <div class="breakdown-bar">
           <div class="breakdown-segment wti" id="nat-bar-wti" style="width: 0%" title="Brut WTI"></div>
           <div class="breakdown-segment ticpe" id="nat-bar-ticpe" style="width: 0%" title="TICPE (Taxe Fixe)"></div>
@@ -112,7 +112,7 @@
     <!-- Rankings Section -->
     <section class="card" style="margin-bottom: 2rem;">
       <div class="card-title">
-        <span>🏆 Palmarès des Marges en France (Temps Réel)</span>
+        <span>🏆 Palmarès de la Part Distributeur en France (Temps Réel)</span>
         <span style="font-size: 0.8rem; color: var(--color-margin);" id="ranking-fuel-label">Carburant : SP95-E10</span>
       </div>
       
@@ -120,7 +120,7 @@
         <!-- Left Table: Cheapest -->
         <div style="background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 0.75rem; padding: 1.25rem;">
           <h3 style="color: var(--color-e10); font-size: 0.938rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-            🟢 Les 10 stations les moins chères (Marge la plus basse)
+            🟢 Les 10 stations les moins chères (Part Distributeur la plus basse)
           </h3>
           <div style="overflow-x: auto;">
             <table class="ranking-table" style="width: 100%; border-collapse: collapse; font-size: 0.813rem; text-align: left;" id="ranking-bottom-table">
@@ -129,7 +129,7 @@
                   <th style="padding: 0.5rem;">Enseigne</th>
                   <th style="padding: 0.5rem;">Ville</th>
                   <th style="padding: 0.5rem; text-align: right;">Prix</th>
-                  <th style="padding: 0.5rem; text-align: right; color: var(--color-margin);">Marge Brut</th>
+                  <th style="padding: 0.5rem; text-align: right; color: var(--color-margin);">Part Distributeur</th>
                 </tr>
               </thead>
               <tbody id="ranking-bottom-tbody">
@@ -142,7 +142,7 @@
         <!-- Right Table: Most Expensive -->
         <div style="background: rgba(236, 72, 153, 0.02); border: 1px solid rgba(236, 72, 153, 0.1); border-radius: 0.75rem; padding: 1.25rem;">
           <h3 style="color: var(--color-sp98); font-size: 0.938rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-            🔴 Les 10 stations les plus chères (Marge la plus haute)
+            🔴 Les 10 stations les plus chères (Part Distributeur la plus haute)
           </h3>
           <div style="overflow-x: auto;">
             <table class="ranking-table" style="width: 100%; border-collapse: collapse; font-size: 0.813rem; text-align: left;" id="ranking-top-table">
@@ -151,7 +151,7 @@
                   <th style="padding: 0.5rem;">Enseigne</th>
                   <th style="padding: 0.5rem;">Ville</th>
                   <th style="padding: 0.5rem; text-align: right;">Prix</th>
-                  <th style="padding: 0.5rem; text-align: right; color: var(--color-margin);">Marge Brut</th>
+                  <th style="padding: 0.5rem; text-align: right; color: var(--color-margin);">Part Distributeur</th>
                 </tr>
               </thead>
               <tbody id="ranking-top-tbody">
@@ -221,7 +221,7 @@
 
           <!-- Station Price Breakdown Component -->
           <div class="price-breakdown-container" id="st-price-breakdown" style="display: none; margin-bottom: 1rem;">
-            <div class="price-breakdown-title">📊 Répartition du Prix de cette Station (Taxes, Pétrole & Marge)</div>
+            <div class="price-breakdown-title">📊 Répartition du Prix de cette Station (Taxes, Pétrole & Distributeur)</div>
             <div class="breakdown-bar">
               <div class="breakdown-segment wti" id="st-bar-wti" style="width: 0%" title="Brut WTI"></div>
               <div class="breakdown-segment ticpe" id="st-bar-ticpe" style="width: 0%" title="TICPE (Taxe Fixe)"></div>
