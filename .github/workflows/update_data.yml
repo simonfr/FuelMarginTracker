@@ -1,17 +1,28 @@
-name: PompeWatch Daily Update
+name: FuelMarginTracker CI/CD
 
 on:
+  push:
+    branches: ["main"]
   schedule:
     - cron: '0 5 * * *' # Every day at 05:00 UTC
   workflow_dispatch: # Allows manual trigger
 
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages and git push
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs in progress
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
+  # Job 1: Update daily data (runs only on schedule or workflow_dispatch)
   update-data:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -37,3 +48,24 @@ jobs:
           git commit -m "data: daily update [skip ci]"
           git push origin main
         fi
+
+  # Job 2: Deploy static files to GitHub Pages (runs on pushes, or after update-data finishes)
+  deploy:
+    needs: update-data
+    if: always() && (needs.update-data.result == 'success' || needs.update-data.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.' # Deploy the root folder containing index.html, index.css, app.js, and data/
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
