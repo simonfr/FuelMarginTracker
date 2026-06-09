@@ -81,6 +81,60 @@
       </div>
     </section>
 
+    <!-- Rankings Section -->
+    <section class="card" style="margin-bottom: 2rem;">
+      <div class="card-title">
+        <span>🏆 Palmarès des Marges en France (Temps Réel)</span>
+        <span style="font-size: 0.8rem; color: var(--color-margin);" id="ranking-fuel-label">Carburant : SP95-E10</span>
+      </div>
+      
+      <div class="rankings-grid">
+        <!-- Left Table: Cheapest -->
+        <div style="background: rgba(16, 185, 129, 0.02); border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 0.75rem; padding: 1.25rem;">
+          <h3 style="color: var(--color-e10); font-size: 0.938rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            🟢 Les 10 stations les moins chères (Marge la plus basse)
+          </h3>
+          <div style="overflow-x: auto;">
+            <table class="ranking-table" style="width: 100%; border-collapse: collapse; font-size: 0.813rem; text-align: left;" id="ranking-bottom-table">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-weight: 500;">
+                  <th style="padding: 0.5rem;">Enseigne</th>
+                  <th style="padding: 0.5rem;">Ville</th>
+                  <th style="padding: 0.5rem; text-align: right;">Prix</th>
+                  <th style="padding: 0.5rem; text-align: right; color: var(--color-margin);">Marge Brut</th>
+                </tr>
+              </thead>
+              <tbody id="ranking-bottom-tbody">
+                <tr><td colspan="4" style="text-align: center; padding: 1rem; color: var(--text-secondary);">Chargement du palmarès...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Right Table: Most Expensive -->
+        <div style="background: rgba(236, 72, 153, 0.02); border: 1px solid rgba(236, 72, 153, 0.1); border-radius: 0.75rem; padding: 1.25rem;">
+          <h3 style="color: var(--color-sp98); font-size: 0.938rem; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+            🔴 Les 10 stations les plus chères (Marge la plus haute)
+          </h3>
+          <div style="overflow-x: auto;">
+            <table class="ranking-table" style="width: 100%; border-collapse: collapse; font-size: 0.813rem; text-align: left;" id="ranking-top-table">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-light); color: var(--text-muted); font-weight: 500;">
+                  <th style="padding: 0.5rem;">Enseigne</th>
+                  <th style="padding: 0.5rem;">Ville</th>
+                  <th style="padding: 0.5rem; text-align: right;">Prix</th>
+                  <th style="padding: 0.5rem; text-align: right; color: var(--color-margin);">Marge Brut</th>
+                </tr>
+              </thead>
+              <tbody id="ranking-top-tbody">
+                <tr><td colspan="4" style="text-align: center; padding: 1rem; color: var(--text-secondary);">Chargement du palmarès...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Search & Micro View (Stations Comparison) -->
     <div class="dashboard-grid">
       <!-- Search & Stations List -->
@@ -134,7 +188,7 @@
         </div>
 
         <!-- Visualizer Area -->
-        <div id="station-chart-wrapper" style="position: relative; height: 260px; width: 100%; display: none;">
+        <div id="station-chart-wrapper" style="position: relative; height: 380px; width: 100%; display: none;">
           <canvas id="stationChart"></canvas>
         </div>
         

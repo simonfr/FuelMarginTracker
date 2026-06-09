@@ -485,3 +485,25 @@ header {
   margin-bottom: 1rem;
   color: var(--text-muted);
 }
+
+.rankings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .rankings-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ranking-table th, .ranking-table td {
+  padding: 0.625rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ranking-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+

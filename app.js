@@ -1,12 +1,30 @@
 // App state
 let nationalData = [];
 let searchIndex = [];
+let rankingsData = {};
 let selectedFuel = 'e10';
 let selectedPeriod = 180;
 let nationalChartInstance = null;
 let stationChartInstance = null;
 let currentStations = [];
 let selectedStation = null;
+
+// Brand parsing helpers to handle both string and object types
+function getBrandName(brand) {
+  if (!brand) return 'Station';
+  if (typeof brand === 'object') {
+    return brand.name || brand.brand || 'Station';
+  }
+  return brand;
+}
+
+function getBrandShort(brand) {
+  if (!brand) return 'Station';
+  if (typeof brand === 'object') {
+    return brand.brand || brand.name || 'Station';
+  }
+  return brand;
+}
 
 // Fuel Display Mapping
 const fuelLabels = {
@@ -34,8 +52,98 @@ const fuelColors = {
 window.addEventListener('DOMContentLoaded', async () => {
   await loadNationalData();
   await loadSearchIndex();
+  await loadRankings();
   setupEventListeners();
 });
+
+// Load rankings data
+async function loadRankings() {
+  try {
+    const response = await fetch('data/margins_ranking.json?v=' + new Date().getTime());
+    if (!response.ok) throw new Error("Failed to load rankings");
+    rankingsData = await response.json();
+    renderRankings();
+  } catch (error) {
+    console.error("Error loading rankings:", error);
+    document.getElementById('ranking-bottom-tbody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-sp98); padding: 1rem;">Erreur de chargement du palmarès</td></tr>`;
+    document.getElementById('ranking-top-tbody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-sp98); padding: 1rem;">Erreur de chargement du palmarès</td></tr>`;
+  }
+}
+
+// Render Rankings Tables
+function renderRankings() {
+  const fuelKey = fuelKeysMap[selectedFuel];
+  document.getElementById('ranking-fuel-label').textContent = `Carburant : ${fuelLabels[selectedFuel]}`;
+  
+  const fuelRankings = rankingsData[fuelKey] || { top: [], bottom: [] };
+  
+  const bottomTbody = document.getElementById('ranking-bottom-tbody');
+  const topTbody = document.getElementById('ranking-top-tbody');
+  
+  // Render Bottom 10 (Cheapest)
+  bottomTbody.innerHTML = '';
+  if (fuelRankings.bottom.length === 0) {
+    bottomTbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 1rem;">Aucune donnée disponible</td></tr>`;
+  } else {
+    fuelRankings.bottom.forEach(st => {
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.addEventListener('click', () => {
+        // Clicking a ranking station searches for it!
+        document.getElementById('search-input').value = st.cp;
+        loadStationsByPostalCode(st.cp).then(() => {
+          setTimeout(() => {
+            const item = Array.from(document.querySelectorAll('.station-item')).find(el => el.querySelector('.station-brand').textContent === st.brand);
+            if (item) {
+              item.click();
+              item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 300);
+        });
+      });
+      
+      tr.innerHTML = `
+        <td style="padding: 0.625rem 0.5rem; font-weight: 500;">${st.brand}</td>
+        <td style="padding: 0.625rem 0.5rem; color: var(--text-secondary); text-transform: capitalize;">${st.ville.toLowerCase()} (${st.cp})</td>
+        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-e10);">${st.price.toFixed(3)} €</td>
+        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-margin);">+${st.margin.toFixed(3)} €</td>
+      `;
+      bottomTbody.appendChild(tr);
+    });
+  }
+  
+  // Render Top 10 (Most Expensive)
+  topTbody.innerHTML = '';
+  if (fuelRankings.top.length === 0) {
+    topTbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 1rem;">Aucune donnée disponible</td></tr>`;
+  } else {
+    fuelRankings.top.forEach(st => {
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.addEventListener('click', () => {
+        // Clicking a ranking station searches for it!
+        document.getElementById('search-input').value = st.cp;
+        loadStationsByPostalCode(st.cp).then(() => {
+          setTimeout(() => {
+            const item = Array.from(document.querySelectorAll('.station-item')).find(el => el.querySelector('.station-brand').textContent === st.brand);
+            if (item) {
+              item.click();
+              item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 300);
+        });
+      });
+      
+      tr.innerHTML = `
+        <td style="padding: 0.625rem 0.5rem; font-weight: 500;">${st.brand}</td>
+        <td style="padding: 0.625rem 0.5rem; color: var(--text-secondary); text-transform: capitalize;">${st.ville.toLowerCase()} (${st.cp})</td>
+        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-sp98);">${st.price.toFixed(3)} €</td>
+        <td style="padding: 0.625rem 0.5rem; text-align: right; font-weight: 600; color: var(--color-margin);">+${st.margin.toFixed(3)} €</td>
+      `;
+      topTbody.appendChild(tr);
+    });
+  }
+}
 
 // Load global trend data
 async function loadNationalData() {
@@ -223,6 +331,7 @@ function setupEventListeners() {
       selectedFuel = e.target.dataset.fuel;
       updateTopMetrics();
       renderNationalChart();
+      renderRankings();
       if (selectedStation) {
         updateStationDetailView(selectedStation);
       }
@@ -377,7 +486,7 @@ function renderStationsList(stations) {
     
     item.innerHTML = `
       <div class="station-item-header">
-        <span class="station-brand">${station.brand}</span>
+        <span class="station-brand">${getBrandName(station.brand)}</span>
         <span class="station-price-tag" style="color: ${fuelColors[selectedFuel]}">${latestPrice}</span>
       </div>
       <div class="station-address">${station.adresse.toLowerCase()}</div>
@@ -424,8 +533,8 @@ function updateStationDetailView(station) {
   detailCard.style.opacity = '1';
   detailCard.style.pointerEvents = 'auto';
   
-  document.getElementById('station-brand-badge').textContent = station.brand;
-  document.getElementById('station-name-text').textContent = station.brand;
+  document.getElementById('station-brand-badge').textContent = getBrandShort(station.brand);
+  document.getElementById('station-name-text').textContent = getBrandName(station.brand);
   document.getElementById('station-address-text').textContent = `${station.adresse.toLowerCase()}, ${station.cp} ${station.ville}`;
   
   // Calculate and display latency
@@ -556,7 +665,7 @@ function renderStationChart(station) {
       labels: labels,
       datasets: [
         {
-          label: `${station.brand} (Locale)`,
+          label: `${getBrandName(station.brand)} (Locale)`,
           data: stationPrices,
           borderColor: fuelColors[selectedFuel],
           borderWidth: 3,
