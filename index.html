@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FuelMarginTracker - Observatoire Carburants vs WTI Crude Oil</title>
+  <meta name="description" content="Obtenez les écarts et les corrélations de prix en temps réel entre le baril de brut WTI et les prix des carburants à la pompe en France.">
+  <link rel="stylesheet" href="index.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-group">
+        <div class="logo-icon">⛽</div>
+        <div class="logo-text">
+          <h1>FuelMarginTracker</h1>
+          <span>Corrélation Brut WTI vs Pompe France</span>
+        </div>
+      </div>
+      <div class="badge-live" id="last-update-badge">Données à jour</div>
+    </header>
+
+    <p class="intro-desc">
+      Est-ce que votre station service locale répercute équitablement et rapidement les baisses du cours du pétrole brut WTI ? 
+      Visualisez ci-dessous la moyenne nationale et comparez vos stations locales.
+    </p>
+
+    <!-- Global Dashboard Section -->
+    <section class="card" style="margin-bottom: 2rem;">
+      <div class="card-title">
+        <span>📈 Observatoire Macro-Économique National</span>
+        <span style="font-size: 0.8rem; color: var(--text-muted);" id="national-trend-range">Derniers 60 jours</span>
+      </div>
+      
+      <!-- Stats Summary -->
+      <div class="stats-row" id="national-stats">
+        <div class="stat-box wti">
+          <span class="stat-label">Brut WTI (€/L)</span>
+          <span class="stat-value" id="stat-wti">- €</span>
+        </div>
+        <div class="stat-box gazole">
+          <span class="stat-label">Moy. Gazole</span>
+          <span class="stat-value" id="stat-gazole">- €</span>
+        </div>
+        <div class="stat-box e10">
+          <span class="stat-label">Moy. SP95-E10</span>
+          <span class="stat-value" id="stat-e10">- €</span>
+        </div>
+        <div class="stat-box margin">
+          <span class="stat-label">Marge Brut Théorique</span>
+          <span class="stat-value" id="stat-margin">- €</span>
+        </div>
+      </div>
+
+      <!-- Chart Controls -->
+      <div class="controls-bar">
+        <div>
+          <span style="font-size: 0.875rem; color: var(--text-secondary); margin-right: 0.5rem; font-weight: 500;">Carburant national :</span>
+          <div class="button-group" id="fuel-select-group">
+            <button class="btn-filter active" data-fuel="e10">E10</button>
+            <button class="btn-filter" data-fuel="gazole">Gazole</button>
+            <button class="btn-filter" data-fuel="sp95">SP95</button>
+            <button class="btn-filter" data-fuel="sp98">SP98</button>
+          </div>
+        </div>
+        <div>
+          <span style="font-size: 0.875rem; color: var(--text-secondary); margin-right: 0.5rem; font-weight: 500;">Période :</span>
+          <div class="button-group" id="period-select-group">
+            <button class="btn-filter" data-period="15">15J</button>
+            <button class="btn-filter" data-period="30">30J</button>
+            <button class="btn-filter active" data-period="60">60J</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main National Chart -->
+      <div style="position: relative; height: 350px; width: 100%;">
+        <canvas id="nationalChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Search & Micro View (Stations Comparison) -->
+    <div class="dashboard-grid">
+      <!-- Search & Stations List -->
+      <section class="card" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <div class="card-title">
+          <span>🔍 Rechercher par Station</span>
+        </div>
+        
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <span class="search-icon">📍</span>
+            <input type="text" class="search-input" id="search-input" placeholder="Entrez un code postal ou une ville... (ex: 35000, Rennes)" autocomplete="off">
+          </div>
+          <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+        </div>
+
+        <div id="stations-list-title" style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); display: none;">
+          Stations trouvées :
+        </div>
+
+        <!-- Station listing container -->
+        <div class="station-list" id="station-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">🧭</div>
+            <p>Saisissez un code postal ou une ville pour voir et comparer les stations-services locales.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Selected Station Comparison Visualizer -->
+      <section class="card" id="station-detail-card" style="opacity: 0.4; pointer-events: none;">
+        <div class="card-title">
+          <span>⛽ Analyse de la Station Sélectionnée</span>
+          <span class="badge-live" style="background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.2); color: var(--color-wti);" id="station-brand-badge">Aucune</span>
+        </div>
+
+        <!-- Station Info Details -->
+        <div style="margin-bottom: 1rem;">
+          <h3 id="station-name-text" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">Sélectionnez une station</h3>
+          <p id="station-address-text" style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Veuillez d'abord chercher un code postal.</p>
+          
+          <div id="latency-indicator" style="display: none;">
+            <div class="latency-badge">
+              <span>⏱️ Latence de répercussion des baisses :</span>
+              <span class="latency-value" id="latency-days">~ Jours</span>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic;">
+              * Calcule la latence moyenne de cette station pour répercuter les baisses de cours du WTI.
+            </p>
+          </div>
+        </div>
+
+        <!-- Visualizer Area -->
+        <div id="station-chart-wrapper" style="position: relative; height: 260px; width: 100%; display: none;">
+          <canvas id="stationChart"></canvas>
+        </div>
+        
+        <div id="station-chart-empty" class="empty-state" style="padding: 4rem 1rem;">
+          <div class="empty-state-icon">📊</div>
+          <p>Les graphiques de comparaison s'afficheront ici après sélection.</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <p>
+        FuelMarginTracker &copy; 2026. Code source sous licence libre Etalab. 
+        Données des prix issues de <a href="https://www.data.gouv.fr/fr/datasets/prix-des-carburants-en-france-flux-instantane-v2/" target="_blank">data.gouv.fr</a>. 
+        Cours WTI via <a href="https://finance.yahoo.com/quote/CL=F/" target="_blank">Yahoo Finance</a>.
+      </p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
