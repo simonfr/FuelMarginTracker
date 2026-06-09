@@ -40,7 +40,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 // Load global trend data
 async function loadNationalData() {
   try {
-    const response = await fetch('data/national.json');
+    const response = await fetch('data/national.json?v=' + new Date().getTime());
     if (!response.ok) throw new Error("Failed to load national data");
     nationalData = await response.json();
     
@@ -65,7 +65,7 @@ async function loadNationalData() {
 // Load autocomplete search index
 async function loadSearchIndex() {
   try {
-    const response = await fetch('data/search_index.json');
+    const response = await fetch('data/search_index.json?v=' + new Date().getTime());
     if (!response.ok) throw new Error("Failed to load search index");
     searchIndex = await response.json();
   } catch (error) {
@@ -334,7 +334,7 @@ async function loadStationsByPostalCode(cp) {
   title.style.display = 'none';
   
   try {
-    const response = await fetch(`data/stations/${cp}.json`);
+    const response = await fetch(`data/stations/${cp}.json?v=` + new Date().getTime());
     if (!response.ok) throw new Error("Aucune station disponible pour ce code postal.");
     
     const data = await response.json();
