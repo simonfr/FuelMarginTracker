@@ -192,8 +192,26 @@ const fuelColors = {
   sp98: '#ec4899'      // Pink
 };
 
+// Theme UI helper
+function updateThemeUI() {
+  const isDark = document.body.classList.contains('dark-theme');
+  const toggleBtn = document.getElementById('theme-toggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = isDark ? '☀️' : '🌙';
+  }
+}
+
 // Initialize app
 window.addEventListener('DOMContentLoaded', async () => {
+  // Apply saved theme immediately to prevent flashing
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+  } else {
+    document.body.classList.remove('dark-theme');
+  }
+  updateThemeUI();
+
   await loadNationalData();
   await loadSearchIndex();
   await loadRankings();
@@ -390,6 +408,15 @@ function updateTopMetrics() {
 function renderNationalChart() {
   const ctx = document.getElementById('nationalChart').getContext('2d');
   
+  // Theme-based colors
+  const isDark = document.body.classList.contains('dark-theme');
+  const labelColor = isDark ? '#94a3b8' : '#475569';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.06)';
+  const tickColor = isDark ? '#64748b' : '#475569';
+  const wtiColor = isDark ? '#06b6d4' : '#0891b2';
+  const marginColor = isDark ? '#fbbf24' : '#d97706';
+  const marginBgColor = isDark ? 'rgba(251, 191, 36, 0.05)' : 'rgba(217, 119, 6, 0.05)';
+  
   // Filter national data based on period selection
   const cutOffDate = new Date();
   cutOffDate.setDate(cutOffDate.getDate() - selectedPeriod);
@@ -455,7 +482,7 @@ function renderNationalChart() {
         {
           label: 'Baril de Brut WTI (€/L)',
           data: wtiPrices,
-          borderColor: '#06b6d4',
+          borderColor: wtiColor,
           borderWidth: 2,
           borderDash: [5, 5],
           fill: false,
@@ -465,9 +492,9 @@ function renderNationalChart() {
         {
           label: 'Part Distributeur Reste (€/L)',
           data: distributorShares,
-          borderColor: '#fbbf24',
+          borderColor: marginColor,
           borderWidth: 2.5,
-          backgroundColor: 'rgba(251, 191, 36, 0.05)',
+          backgroundColor: marginBgColor,
           fill: false,
           tension: 0.2,
           yAxisID: 'y1'
@@ -485,7 +512,7 @@ function renderNationalChart() {
         legend: {
           position: 'top',
           labels: {
-            color: '#94a3b8',
+            color: labelColor,
             font: { family: 'Outfit', size: 12 }
           }
         },
@@ -496,20 +523,20 @@ function renderNationalChart() {
       },
       scales: {
         x: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#64748b', font: { family: 'Outfit' } }
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { family: 'Outfit' } }
         },
         y: {
           position: 'left',
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#94a3b8', font: { family: 'Outfit' } },
-          title: { display: true, text: 'Prix à la pompe / WTI (€/L)', color: '#94a3b8', font: { family: 'Outfit' } }
+          grid: { color: gridColor },
+          ticks: { color: labelColor, font: { family: 'Outfit' } },
+          title: { display: true, text: 'Prix à la pompe / WTI (€/L)', color: labelColor, font: { family: 'Outfit' } }
         },
         y1: {
           position: 'right',
           grid: { drawOnChartArea: false },
-          ticks: { color: '#fbbf24', font: { family: 'Outfit' } },
-          title: { display: true, text: 'Part Distributeur (€/L)', color: '#fbbf24', font: { family: 'Outfit' } }
+          ticks: { color: marginColor, font: { family: 'Outfit' } },
+          title: { display: true, text: 'Part Distributeur (€/L)', color: marginColor, font: { family: 'Outfit' } }
         }
       }
     }
@@ -600,6 +627,23 @@ function setupEventListeners() {
     listFilter.addEventListener('input', (e) => {
       const val = e.target.value.trim().toLowerCase();
       filterStationsList(val);
+    });
+  }
+  
+  // Theme toggle button
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-theme');
+      const isDark = document.body.classList.contains('dark-theme');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      updateThemeUI();
+      
+      // Re-render charts with correct themes
+      renderNationalChart();
+      if (selectedStation) {
+        renderStationChart(selectedStation);
+      }
     });
   }
 }
@@ -892,6 +936,14 @@ function calculateLatency(station, nationalHistory, fuelKey) {
 function renderStationChart(station) {
   const ctx = document.getElementById('stationChart').getContext('2d');
   
+  // Theme-based colors
+  const isDark = document.body.classList.contains('dark-theme');
+  const labelColor = isDark ? '#94a3b8' : '#475569';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.06)';
+  const tickColor = isDark ? '#64748b' : '#475569';
+  const wtiColor = isDark ? '#06b6d4' : '#0891b2';
+  const nationalAvgColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)';
+  
   const fuelKey = fuelKeysMap[selectedFuel];
   const stationHistory = station.history[fuelKey] || [];
   
@@ -940,7 +992,7 @@ function renderStationChart(station) {
         {
           label: 'Moyenne Nationale',
           data: nationalAverages,
-          borderColor: 'rgba(255, 255, 255, 0.4)',
+          borderColor: nationalAvgColor,
           borderWidth: 2,
           borderDash: [3, 3],
           fill: false,
@@ -949,7 +1001,7 @@ function renderStationChart(station) {
         {
           label: 'Brut WTI',
           data: wtiPrices,
-          borderColor: '#06b6d4',
+          borderColor: wtiColor,
           borderWidth: 1.5,
           borderDash: [5, 5],
           fill: false,
@@ -968,19 +1020,19 @@ function renderStationChart(station) {
         legend: {
           position: 'top',
           labels: {
-            color: '#94a3b8',
+            color: labelColor,
             font: { family: 'Outfit', size: 10 }
           }
         }
       },
       scales: {
         x: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#64748b', font: { family: 'Outfit', size: 10 } }
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { family: 'Outfit', size: 10 } }
         },
         y: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#94a3b8', font: { family: 'Outfit', size: 10 } }
+          grid: { color: gridColor },
+          ticks: { color: labelColor, font: { family: 'Outfit', size: 10 } }
         }
       }
     }
