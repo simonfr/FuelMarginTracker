@@ -21,7 +21,7 @@ function parseBrand(brand) {
   }
   
   const knownBrands = [
-    'TotalEnergies', 'Total Energies', 'Total', 'Carrefour Contact', 'Carrefour Market', 'Carrefour Express', 'Carrefour',
+    'Total Access', 'TotalEnergies', 'Total Energies', 'Total', 'Carrefour Contact', 'Carrefour Market', 'Carrefour Express', 'Carrefour',
     'E.Leclerc', 'Leclerc', 'Intermarché Contact', 'Intermarché Super', 'Intermarché Hyper', 'Intermarché',
     'Super U', 'Hyper U', 'U Express', 'Système U', 'Esso Express', 'Esso', 'BP', 'Avia', 'Auchan Supermarché',
     'Auchan', 'Cora', 'Dyneff', 'Elan', 'Shell', 'Colruyt', 'Netto', 'Agip'
@@ -255,7 +255,7 @@ function renderRankings() {
         document.getElementById('search-input').value = st.cp;
         loadStationsByPostalCode(st.cp).then(() => {
           setTimeout(() => {
-            const item = Array.from(document.querySelectorAll('.station-item')).find(el => el.querySelector('.station-brand').textContent === st.brand);
+            const item = Array.from(document.querySelectorAll('.station-item')).find(el => el.dataset.id === st.id);
             if (item) {
               item.click();
               item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -298,7 +298,7 @@ function renderRankings() {
         document.getElementById('search-input').value = st.cp;
         loadStationsByPostalCode(st.cp).then(() => {
           setTimeout(() => {
-            const item = Array.from(document.querySelectorAll('.station-item')).find(el => el.querySelector('.station-brand').textContent === st.brand);
+            const item = Array.from(document.querySelectorAll('.station-item')).find(el => el.dataset.id === st.id);
             if (item) {
               item.click();
               item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -752,19 +752,22 @@ function renderStationsList(stations, isFiltered) {
     
     const item = document.createElement('div');
     item.className = 'station-item';
+    item.dataset.id = station.id;
     if (selectedStation && selectedStation.id === station.id) {
       item.classList.add('active');
     }
     
     // Parse brand to short/modifier
     const brandInfo = parseBrand(station.brand);
+    const mainTitle = brandInfo.modifier || brandInfo.short;
+    const subTitle = brandInfo.modifier ? brandInfo.short : '';
     
     item.innerHTML = `
       <div class="station-item-header">
-        <span class="station-brand">${brandInfo.short}</span>
+        <span class="station-brand">${mainTitle}</span>
         <span class="station-price-tag" style="color: ${fuelColors[selectedFuel]}">${latestPrice}</span>
       </div>
-      ${brandInfo.modifier ? `<div class="station-item-modifier">${brandInfo.modifier}</div>` : ''}
+      ${subTitle ? `<div class="station-item-modifier">${subTitle}</div>` : ''}
       <div class="station-item-details">
         <div class="station-item-detail-row">
           <span class="station-item-detail-icon">📍</span>
