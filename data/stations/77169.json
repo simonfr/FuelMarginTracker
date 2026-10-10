@@ -1,1 +1,1 @@
-{"cp":"77169","stations":[{"id":"77169001","brand":"Indépendant","adresse":"2 Rue de Rebais","ville":"Boissy-Le-Châtel","lat":48.822838,"lng":3.13773,"history":{"Gazole":[{"date":"2026-10-07","price":2.25}],"E10":[{"date":"2026-10-07","price":1.99}]}}]}
+{"cp":"77169","stations":[{"id":"77169001","brand":"Indépendant","adresse":"2 Rue de Rebais","ville":"Boissy-Le-Châtel","lat":48.822838,"lng":3.13773,"history":{"Gazole":[{"date":"2026-10-07","price":2.25},{"date":"2026-10-09","price":2.25}],"E10":[{"date":"2026-10-07","price":1.99},{"date":"2026-10-09","price":1.99}]}}]}
